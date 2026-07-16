@@ -1204,7 +1204,7 @@ describe('Factory Board — persisted cards', () => {
     } finally {
       releaseSecond();
       releaseFirst();
-      await waitFor(() => expect(captured.messages).toHaveLength(1));
+      await waitFor(() => expect(captured.skillInvocations).toHaveLength(1));
     }
   });
 
@@ -1260,7 +1260,8 @@ describe('Factory Board — persisted cards', () => {
       expect(await screen.findAllByRole('menuitem', { name: 'Starting…' })).toHaveLength(2);
     } finally {
       releaseWorktrees();
-      await waitFor(() => expect(captured.messages).toHaveLength(2));
+      await waitFor(() => expect(captured.skillInvocations).toHaveLength(1));
+      await waitFor(() => expect(captured.messages).toHaveLength(1));
     }
   });
 
