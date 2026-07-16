@@ -396,8 +396,8 @@ function Board({ project }: { project: Project & { githubProjectId: string } }) 
   const upsert = useUpsertWorkItemMutation(githubProjectId);
   const update = useUpdateWorkItemMutation(githubProjectId);
   const remove = useDeleteWorkItemMutation(githubProjectId);
-  const { start, enabled: runEnabled } = useStartFactoryRun();
-  const triage = useStartIssueTriageMutation(githubProjectId);
+  const { start, pendingRuns, enabled: runEnabled } = useStartFactoryRun();
+  const { triage, pendingIssueNumbers } = useStartIssueTriageMutation(githubProjectId);
   const navigate = useNavigate();
 
   // Worktrees that still exist. A card's session ref whose worktree was
@@ -467,7 +467,6 @@ function Board({ project }: { project: Project & { githubProjectId: string } }) 
   }
 
   const mutationError = [start, triage, upsert, update, remove, selectWorkspace].find(m => m.isError)?.error;
-  const pendingRunWorkItem = start.isPending ? start.variables?.workItem : undefined;
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-3">
@@ -514,7 +513,7 @@ function Board({ project }: { project: Project & { githubProjectId: string } }) 
                   columnStage={stage.id}
                   liveWorktreePaths={liveWorktreePaths}
                   runDisabled={!runEnabled}
-                  pendingRunRole={pendingRunWorkItem?.id === item.id ? pendingRunWorkItem.role : undefined}
+                  pendingRunRole={pendingRuns.find(run => run.id === item.id)?.role}
                   onOpenThread={session => void openThread(session)}
                   onStartRun={(spec, action) =>
                     start.mutate({
@@ -543,10 +542,8 @@ function Board({ project }: { project: Project & { githubProjectId: string } }) 
                 <CandidateCard
                   key={candidate.sourceKey}
                   candidate={candidate}
-                  pendingRunRole={
-                    pendingRunWorkItem?.sourceKey === candidate.sourceKey ? pendingRunWorkItem.role : undefined
-                  }
-                  triageStarting={triage.isPending && triage.variables?.number === candidate.issue?.number}
+                  pendingRunRole={pendingRuns.find(run => run.sourceKey === candidate.sourceKey)?.role}
+                  triageStarting={candidate.issue !== undefined && pendingIssueNumbers.includes(candidate.issue.number)}
                   disabled={!runEnabled}
                   onRun={(action, prompt) =>
                     start.mutate({
